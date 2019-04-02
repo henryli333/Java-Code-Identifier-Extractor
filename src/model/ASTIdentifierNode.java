@@ -1,7 +1,6 @@
 package model;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.HashSet;
 
 public class ASTIdentifierNode {
@@ -10,7 +9,7 @@ public class ASTIdentifierNode {
     public final IdentifierKind Kind;
     public final String Type;
 
-    private Set<ASTIdentifierNode> _children = new HashSet<>();
+    private Collection<ASTIdentifierNode> _children = new HashSet<>();
 
     public ASTIdentifierNode(String name, IdentifierKind kind, String type) {
         Name = name;

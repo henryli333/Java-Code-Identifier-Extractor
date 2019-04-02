@@ -1,7 +1,12 @@
 package output;
 
 import model.ASTIdentifierNode;
+import model.IdentifierKind;
 import output.interfaces.IOutputFormatter;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class SimpleOutputFormatter implements IOutputFormatter {
 
@@ -18,7 +23,19 @@ public class SimpleOutputFormatter implements IOutputFormatter {
 
         System.out.print(printNode(node) + "\n");
 
-        for (ASTIdentifierNode child : node.getChildren()) {
+        List<ASTIdentifierNode> childList = new ArrayList<>(node.getChildren());
+        childList.sort((o1, o2) -> {
+            if (o1.Kind.ordinal() > o2.Kind.ordinal())
+                return -1;
+            else if (o1.Kind.ordinal() == o2.Kind.ordinal()) {
+                return o1.Name.compareTo(o2.Name);
+            }
+            else {
+                return 1;
+            }
+        });
+
+        for (ASTIdentifierNode child : childList) {
             print(child, depth + 1);
         }
 
