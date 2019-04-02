@@ -5,5 +5,6 @@ public enum IdentifierKind {
     PACKAGE,
     CLASS,
     METHOD,
+    CONSTRUCTOR,
     VARIABLE
 }

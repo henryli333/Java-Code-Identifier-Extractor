@@ -13,17 +13,26 @@ import model.IdentifierKind;
 import output.SimpleOutputFormatter;
 import output.interfaces.IOutputFormatter;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class Main {
     public static void main(String[] args) throws Exception {
 
         // TODO: Take from args? Also preferably recursive option would be nice (see below)
-        String file = "./src/parser/Main.java";
+        String rootFile = System.getProperty("user.dir");
+        List<File> files = getAllJavaFilesFromRoot(new File(rootFile));
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
 
         // TODO: Get a list instead of single
-        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjects(file);
+        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjectsFromFiles(files);
         JavacTask javac = (JavacTask) compiler
                 .getTask(null, fileManager, null, null, null, fileObjects);
 
@@ -39,6 +48,19 @@ public class Main {
         formatter.print(root);
 
         // IDEA: make this a command line application that can print to stdout and be piped into analysis program
+    }
+
+    private static List<File> getAllJavaFilesFromRoot(File rootDir) {
+
+        List<File> javaFiles = new ArrayList<>();
+        javaFiles.addAll(Arrays.asList(rootDir.listFiles(((dir, name) -> name.endsWith(".java")))));
+
+        for (File dir : rootDir.listFiles((dir, name) -> Paths.get(dir.toString(), name).toFile().isDirectory())) {
+            javaFiles.addAll(getAllJavaFilesFromRoot(dir));
+        }
+
+        return javaFiles;
+
     }
 
     // TODO: Provide some tree structure as in and out parameter so we can construct a tree to serialise into json instead of printing
@@ -72,15 +94,25 @@ public class Main {
         @Override
         public Void visitMethod(MethodTree mt, ASTIdentifierNode p) {
 
-            ASTIdentifierNode methodNode = new ASTIdentifierNode(mt.getName().toString(), IdentifierKind.METHOD, mt.getReturnType().toString());
+            ASTIdentifierNode methodNode;
+
+            if (mt.getReturnType() == null) {
+                methodNode = new ASTIdentifierNode(mt.getName().toString(), IdentifierKind.CONSTRUCTOR);
+            }
+            else {
+                methodNode = new ASTIdentifierNode(mt.getName().toString(), IdentifierKind.METHOD, mt.getReturnType().toString());
+            }
+
             p.addChild(methodNode);
 
             for (VariableTree vt : mt.getParameters()) {
                 vt.accept(this, methodNode);
             }
 
-            for (StatementTree st : mt.getBody().getStatements()) {
-                st.accept(this, methodNode);
+            if (mt.getBody() != null) {
+                for (StatementTree st : mt.getBody().getStatements()) {
+                    st.accept(this, methodNode);
+                }
             }
 
             return super.visitMethod(mt, p);
@@ -182,7 +214,8 @@ public class Main {
         public Void visitIf(IfTree it, ASTIdentifierNode p) {
 
             it.getThenStatement().accept(this, p);
-            it.getElseStatement().accept(this, p);
+            if (it.getElseStatement() != null)
+                it.getElseStatement().accept(this, p);
 
             return super.visitIf(it, p);
         }
@@ -190,6 +223,13 @@ public class Main {
         // TODO: Discuss how to deal with lambdas. New kind, or flatten onto enclosing method?
         @Override
         public Void visitLambdaExpression(LambdaExpressionTree let, ASTIdentifierNode p) {
+
+            for (VariableTree vt : let.getParameters()) {
+                vt.accept(this, p);
+            }
+
+            let.getBody().accept(this, p);
+
             return super.visitLambdaExpression(let, p);
         }
 

@@ -38,6 +38,9 @@ public class SimpleOutputFormatter implements IOutputFormatter {
             case METHOD:
                 prefix = "Method name: ";
                 break;
+            case CONSTRUCTOR:
+                prefix = "Constructor: ";
+                break;
             case VARIABLE:
                 prefix = "Variable name: ";
                 break;
