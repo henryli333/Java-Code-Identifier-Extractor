@@ -53,7 +53,12 @@ public class Main {
     private static List<File> getAllJavaFilesFromRoot(File rootDir) {
 
         List<File> javaFiles = new ArrayList<>();
-        javaFiles.addAll(Arrays.asList(rootDir.listFiles(((dir, name) -> name.endsWith(".java")))));
+        javaFiles.addAll(Arrays.asList(rootDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".java");
+            }
+        })));
 
         for (File dir : rootDir.listFiles((dir, name) -> Paths.get(dir.toString(), name).toFile().isDirectory())) {
             javaFiles.addAll(getAllJavaFilesFromRoot(dir));
