@@ -15,7 +15,6 @@ import output.interfaces.IOutputFormatter;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +30,6 @@ public class Main {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
 
-        // TODO: Get a list instead of single
         Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjectsFromFiles(files);
         JavacTask javac = (JavacTask) compiler
                 .getTask(null, fileManager, null, null, null, fileObjects);
@@ -68,7 +66,6 @@ public class Main {
 
     }
 
-    // TODO: Provide some tree structure as in and out parameter so we can construct a tree to serialise into json instead of printing
     static class UniversalVisitor extends SimpleTreeVisitor<Void, ASTIdentifierNode> {
 
         @Override
