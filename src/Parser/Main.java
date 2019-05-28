@@ -10,6 +10,7 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.SimpleTreeVisitor;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
+import output.JsonOutputFormatter;
 import output.SimpleOutputFormatter;
 import output.interfaces.IOutputFormatter;
 
@@ -25,7 +26,7 @@ public class Main {
 
         // TODO: Take from args? Also preferably recursive option would be nice (see below)
         String rootFile = System.getProperty("user.dir");
-        List<File> files = getAllJavaFilesFromRoot(new File(rootFile));
+        List<File> files = getAllJavaFilesFromRoot(new File("/home/reuben/dev/SE701A3/kalah_resources"));
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
@@ -42,8 +43,9 @@ public class Main {
             tree.accept(new UniversalVisitor(), root);
         }
 
-        IOutputFormatter formatter = new SimpleOutputFormatter();
-        formatter.print(root);
+        IOutputFormatter formatter = new JsonOutputFormatter();
+        String output = formatter.print(root);
+        System.out.println(output);
 
         // IDEA: make this a command line application that can print to stdout and be piped into analysis program
     }

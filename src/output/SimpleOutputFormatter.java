@@ -11,32 +11,25 @@ import java.util.List;
 public class SimpleOutputFormatter implements IOutputFormatter {
 
     @Override
-    public void print(ASTIdentifierNode root) {
-        print(root, -1);
+    public String print(ASTIdentifierNode root) {
+        StringBuilder sb = new StringBuilder();
+        print(root, -1, sb);
+        return sb.toString();
     }
 
-    private void print(ASTIdentifierNode node, int depth) {
+    private void print(ASTIdentifierNode node, int depth, StringBuilder sb) {
 
         for (int i = 0; i < depth; ++i) {
-            System.out.print("\t");
+            sb.append("\t");
         }
 
-        System.out.print(printNode(node) + "\n");
+        sb.append(printNode(node)).append("\n");
 
         List<ASTIdentifierNode> childList = new ArrayList<>(node.getChildren());
-        childList.sort((o1, o2) -> {
-            if (o1.Kind.ordinal() > o2.Kind.ordinal())
-                return -1;
-            else if (o1.Kind.ordinal() == o2.Kind.ordinal()) {
-                return o1.Name.compareTo(o2.Name);
-            }
-            else {
-                return 1;
-            }
-        });
+        childList.sort(ASTIdentifierNode::ordinalCompare);
 
         for (ASTIdentifierNode child : childList) {
-            print(child, depth + 1);
+            print(child, depth + 1, sb);
         }
 
     }
