@@ -63,7 +63,7 @@ public class Main {
             javaFiles.addAll(getAllJavaFilesFromRoot(dir));
         }
 
-        return javaFiles;
+        
 
     }
 
