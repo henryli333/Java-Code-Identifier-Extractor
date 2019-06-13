@@ -1,11 +1,9 @@
 package output;
 
-import model.ASTIdentifierNode;
-import model.IdentifierKind;
 import output.interfaces.IOutputFormatter;
+import model.ASTIdentifierNode;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 public class SimpleOutputFormatter implements IOutputFormatter {

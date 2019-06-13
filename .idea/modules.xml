@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/IdentifierExtractor.iml" filepath="$PROJECT_DIR$/IdentifierExtractor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/IdentifierIndexer.iml" filepath="$PROJECT_DIR$/.idea/modules/IdentifierIndexer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/IdentifierIndexer_main.iml" filepath="$PROJECT_DIR$/.idea/modules/IdentifierIndexer_main.iml" group="IdentifierIndexer" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/IdentifierIndexer_test.iml" filepath="$PROJECT_DIR$/.idea/modules/IdentifierIndexer_test.iml" group="IdentifierIndexer" />
     </modules>
   </component>
 </project>

@@ -1,0 +1,13 @@
+apply plugin: 'idea'
+apply plugin: 'java'
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+
+dependencies {
+    compile name: 'tools'
+}

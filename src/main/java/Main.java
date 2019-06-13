@@ -1,5 +1,3 @@
-package parser;
-
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -8,10 +6,10 @@ import javax.tools.ToolProvider;
 import com.sun.source.tree.*;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.SimpleTreeVisitor;
+import output.interfaces.IOutputFormatter;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
 import output.SimpleOutputFormatter;
-import output.interfaces.IOutputFormatter;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -21,6 +19,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
+
+    public static final String DEFAULT_PACKAGE_NAME = "<default package>";
+
     public static void main(String[] args) throws Exception {
 
         // TODO: Take from args? Also preferably recursive option would be nice (see below)
@@ -70,8 +71,7 @@ public class Main {
 
         @Override
         public Void visitCompilationUnit(CompilationUnitTree cut, ASTIdentifierNode p) {
-
-            ASTIdentifierNode compilationUnitNode = new ASTIdentifierNode(cut.getPackageName().toString(), IdentifierKind.PACKAGE);
+            ASTIdentifierNode compilationUnitNode = new ASTIdentifierNode(cut.getPackageName() == null ? DEFAULT_PACKAGE_NAME : cut.getPackageName().toString(), IdentifierKind.PACKAGE);
             p.addChild(compilationUnitNode);
 
             for (Tree t : cut.getTypeDecls()) {
