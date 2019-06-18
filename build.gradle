@@ -5,9 +5,10 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+    mavenCentral()
 }
-
 
 dependencies {
     compile name: 'tools'
+    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.14.3'
 }
