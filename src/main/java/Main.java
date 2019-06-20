@@ -1,11 +1,20 @@
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseResult;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.*;
+import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.ast.stmt.AssertStmt;
+import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.CatchClause;
+import com.github.javaparser.ast.type.Type;
+import com.github.javaparser.ast.type.UnknownType;
+import com.github.javaparser.ast.visitor.GenericVisitorAdapter;
 
-import com.sun.source.tree.*;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.SimpleTreeVisitor;
+import com.github.javaparser.utils.ParserCollectionStrategy;
+import com.github.javaparser.utils.ProjectRoot;
+import com.github.javaparser.utils.SourceRoot;
 import output.interfaces.IOutputFormatter;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
@@ -13,6 +22,8 @@ import output.SimpleOutputFormatter;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,249 +37,150 @@ public class Main {
 
         // TODO: Take from args? Also preferably recursive option would be nice (see below)
         String rootFile = System.getProperty("user.dir");
-        List<File> files = getAllJavaFilesFromRoot(new File(rootFile));
 
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-
-        Iterable<? extends JavaFileObject> fileObjects = fileManager.getJavaFileObjectsFromFiles(files);
-        JavacTask javac = (JavacTask) compiler
-                .getTask(null, fileManager, null, null, null, fileObjects);
-
-        Iterable<? extends CompilationUnitTree> trees = javac.parse();
+        SourceRoot sourceRoot = new SourceRoot(Paths.get(rootFile));
+        List<ParseResult<CompilationUnit>> compilationUnits = sourceRoot.tryToParse();
 
         ASTIdentifierNode root = new ASTIdentifierNode("root", IdentifierKind.ROOT);
 
-        for (CompilationUnitTree tree : trees) {
-            tree.accept(new UniversalVisitor(), root);
+        for (ParseResult<CompilationUnit> pr : compilationUnits) {
+            if (pr.getResult().isPresent()) {
+                pr.getResult().get().accept(new UniversalVisitor(), root);
+            }
         }
 
-        IOutputFormatter formatter = new SimpleOutputFormatter();
-        formatter.print(root);
+        try (IOutputFormatter formatter = new SimpleOutputFormatter()) {
+            formatter.print(root);
+        }
+        catch (IOException e) {
+            int y = 11;
+            e.printStackTrace();
+        }
+        finally {
+            int y = 0;
+            System.out.println("\nDone");
+        }
+
 
         // IDEA: make this a command line application that can print to stdout and be piped into analysis program
     }
 
-    private static List<File> getAllJavaFilesFromRoot(File rootDir) {
-
-        List<File> javaFiles = new ArrayList<>();
-        javaFiles.addAll(Arrays.asList(rootDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".java");
-            }
-        })));
-
-        for (File dir : rootDir.listFiles((dir, name) -> Paths.get(dir.toString(), name).toFile().isDirectory())) {
-            javaFiles.addAll(getAllJavaFilesFromRoot(dir));
-        }
-
-        return javaFiles;
-
-    }
-
-    static class UniversalVisitor extends SimpleTreeVisitor<Void, ASTIdentifierNode> {
+    static class UniversalVisitor extends GenericVisitorAdapter<Void, ASTIdentifierNode> {
 
         @Override
-        public Void visitCompilationUnit(CompilationUnitTree cut, ASTIdentifierNode p) {
-            ASTIdentifierNode compilationUnitNode = new ASTIdentifierNode(cut.getPackageName() == null ? DEFAULT_PACKAGE_NAME : cut.getPackageName().toString(), IdentifierKind.PACKAGE);
+        public Void visit(CompilationUnit u, ASTIdentifierNode p) {
+
+            ASTIdentifierNode compilationUnitNode = new ASTIdentifierNode(u.getPackageDeclaration().isPresent() ? u.getPackageDeclaration().get().getName().asString() : DEFAULT_PACKAGE_NAME, IdentifierKind.PACKAGE);
             p.addChild(compilationUnitNode);
 
-            for (Tree t : cut.getTypeDecls()) {
-                t.accept(this, compilationUnitNode);
-            }
-            return super.visitCompilationUnit(cut, p);
+            u.getTypes().accept(this, compilationUnitNode);
+
+            return null;
         }
 
         @Override
-        public Void visitClass(ClassTree ct, ASTIdentifierNode p) {
+        public Void visit(ClassOrInterfaceDeclaration u, ASTIdentifierNode p) {
 
-            ASTIdentifierNode classNode = new ASTIdentifierNode(ct.getSimpleName().toString(), IdentifierKind.CLASS);
+            ASTIdentifierNode classNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.CLASS);
             p.addChild(classNode);
 
-            for (Tree t : ct.getMembers()) {
-                t.accept(this, classNode);
-            }
+            u.getMembers().accept(this, classNode);
 
-            return super.visitClass(ct, p);
+            return null;
+        }
+
+
+        @Override
+        public Void visit(EnumDeclaration u, ASTIdentifierNode p) {
+            ASTIdentifierNode classNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.CLASS);
+            p.addChild(classNode);
+
+            u.getEntries().accept(this, classNode);
+            u.getMembers().accept(this, classNode);
+
+            return null;
         }
 
         @Override
-        public Void visitMethod(MethodTree mt, ASTIdentifierNode p) {
+        public Void visit(EnumConstantDeclaration u, ASTIdentifierNode p) {
+            ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.VARIABLE, p.Name);
+            p.addChild(variableNode);
 
-            ASTIdentifierNode methodNode;
+            return null;
+        }
 
-            if (mt.getReturnType() == null) {
-                methodNode = new ASTIdentifierNode(mt.getName().toString(), IdentifierKind.CONSTRUCTOR);
-            }
-            else {
-                methodNode = new ASTIdentifierNode(mt.getName().toString(), IdentifierKind.METHOD, mt.getReturnType().toString());
-            }
+        @Override
+        public Void visit(MethodDeclaration u, ASTIdentifierNode p) {
+
+            ASTIdentifierNode methodNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.METHOD, u.getTypeAsString());
 
             p.addChild(methodNode);
 
-            for (VariableTree vt : mt.getParameters()) {
-                vt.accept(this, methodNode);
+            u.getParameters().accept(this, methodNode);
+
+            if (u.getBody().isPresent()) {
+                u.getBody().get().accept(this, methodNode);
             }
 
-            if (mt.getBody() != null) {
-                for (StatementTree st : mt.getBody().getStatements()) {
-                    st.accept(this, methodNode);
-                }
-            }
-
-            return super.visitMethod(mt, p);
+            return null;
         }
 
         @Override
-        public Void visitBlock(BlockTree bt, ASTIdentifierNode p) {
+        public Void visit(ConstructorDeclaration u, ASTIdentifierNode p) {
+            ASTIdentifierNode methodNode = new ASTIdentifierNode("`constructor`", IdentifierKind.CONSTRUCTOR, u.getNameAsString());
 
-            for (StatementTree st : bt.getStatements()) {
-                st.accept(this, p);
-            }
+            p.addChild(methodNode);
 
-            return super.visitBlock(bt, p);
+            u.getParameters().accept(this, methodNode);
+            u.getBody().accept(this, methodNode);
+
+            return null;
         }
 
         @Override
-        public Void visitDoWhileLoop(DoWhileLoopTree dwlt, ASTIdentifierNode p) {
-
-            dwlt.getStatement().accept(this, p);
-
-            return super.visitDoWhileLoop(dwlt, p);
-        }
-
-        @Override
-        public Void visitWhileLoop(WhileLoopTree wlt, ASTIdentifierNode p) {
-
-            wlt.getStatement().accept(this, p);
-
-            return super.visitWhileLoop(wlt, p);
-        }
-
-        @Override
-        public Void visitEnhancedForLoop(EnhancedForLoopTree eflt, ASTIdentifierNode p) {
-
-            eflt.getVariable().accept(this, p);
-            eflt.getStatement().accept(this, p);
-
-            return super.visitEnhancedForLoop(eflt, p);
-        }
-
-        @Override
-        public Void visitSwitch(SwitchTree st, ASTIdentifierNode p) {
-
-            for (CaseTree ct : st.getCases()) {
-                ct.accept(this, p);
-            }
-
-            return super.visitSwitch(st, p);
-        }
-
-        @Override
-        public Void visitCase(CaseTree ct, ASTIdentifierNode p) {
-
-            for (StatementTree st : ct.getStatements()) {
-                st.accept(this, p);
-            }
-
-            return super.visitCase(ct, p);
-        }
-
-        @Override
-        public Void visitTry(TryTree tt, ASTIdentifierNode p) {
-
-            tt.getBlock().accept(this, p);
-
-            for (CatchTree ct : tt.getCatches()) {
-                ct.accept(this, p);
-            }
-
-            tt.getFinallyBlock().accept(this, p);
-
-            // Does this do anything?
-            for (Tree t : tt.getResources()) {
-                t.accept(this, p);
-            }
-
-            return super.visitTry(tt, p);
-        }
-
-        @Override
-        public Void visitCatch(CatchTree ct, ASTIdentifierNode p) {
-
-            ct.getParameter().accept(this, p);
-            ct.getBlock().accept(this, p);
-
-            return super.visitCatch(ct, p);
-        }
-
-        @Override
-        public Void visitConditionalExpression(ConditionalExpressionTree cet, ASTIdentifierNode p) {
-
-            cet.getFalseExpression().accept(this, p);
-            cet.getTrueExpression().accept(this, p);
-
-            return super.visitConditionalExpression(cet, p);
-        }
-
-        @Override
-        public Void visitIf(IfTree it, ASTIdentifierNode p) {
-
-            it.getThenStatement().accept(this, p);
-            if (it.getElseStatement() != null)
-                it.getElseStatement().accept(this, p);
-
-            return super.visitIf(it, p);
-        }
-
-        // TODO: Discuss how to deal with lambdas. New kind, or flatten onto enclosing method?
-        @Override
-        public Void visitLambdaExpression(LambdaExpressionTree let, ASTIdentifierNode p) {
-
-            for (VariableTree vt : let.getParameters()) {
-                vt.accept(this, p);
-            }
-
-            let.getBody().accept(this, p);
-
-            return super.visitLambdaExpression(let, p);
-        }
-
-        // TODO: Figure out what this is
-        @Override
-        public Void visitMemberSelect(MemberSelectTree mst, ASTIdentifierNode p) {
-
-            mst.getExpression().accept(this, p);
-
-            return super.visitMemberSelect(mst, p);
-        }
-
-        // TODO: Figure our what this is
-        @Override
-        public Void visitMemberReference(MemberReferenceTree mrt, ASTIdentifierNode p) {
-            return super.visitMemberReference(mrt, p);
-        }
-
-        @Override
-        public Void visitVariable(VariableTree vt, ASTIdentifierNode p) {
-            ASTIdentifierNode variableNode = new ASTIdentifierNode(vt.getName().toString(), IdentifierKind.VARIABLE, vt.getType().toString());
+        public Void visit(VariableDeclarator u, ASTIdentifierNode p) {
+            ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.VARIABLE, u.getTypeAsString());
             p.addChild(variableNode);
 
-            return super.visitVariable(vt, p);
+            return null;
         }
 
         @Override
-        public Void visitForLoop(ForLoopTree flt, ASTIdentifierNode p) {
+        public Void visit(Parameter u, ASTIdentifierNode p) {
+            ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.PARAMETER, u.getTypeAsString());
+            p.addChild(variableNode);
 
-            for (StatementTree st : flt.getInitializer()) {
-                st.accept(this, p);
-            }
-
-            flt.getStatement().accept(this, p);
-
-            return super.visitForLoop(flt, p);
+            return null;
         }
 
+        @Override
+        public Void visit(LambdaExpr u, ASTIdentifierNode p) {
+            u.getParameters().accept(new ModifiedUniversalVisitor(), p);
+
+            u.getBody().accept(this, p);
+            if (u.getExpressionBody().isPresent()) {
+                u.getExpressionBody().get().accept(this, p);
+            }
+
+            return null;
+        }
+
+        @Override
+        public Void visit(CatchClause u, ASTIdentifierNode p) {
+            u.getParameter().accept(new ModifiedUniversalVisitor(), p);
+            u.getBody().accept(this, p);
+            return null;
+        }
+
+    }
+
+    static class ModifiedUniversalVisitor extends Main.UniversalVisitor {
+        @Override
+        public Void visit(Parameter u, ASTIdentifierNode p) {
+            ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.VARIABLE, u.getType() instanceof UnknownType ? "`inferred type`" : u.getTypeAsString());
+            p.addChild(variableNode);
+
+            return null;
+        }
     }
 }

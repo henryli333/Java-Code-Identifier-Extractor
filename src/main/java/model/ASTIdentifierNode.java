@@ -1,7 +1,6 @@
 package model;
 
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.*;
 
 public class ASTIdentifierNode {
 
@@ -9,7 +8,7 @@ public class ASTIdentifierNode {
     public final IdentifierKind Kind;
     public final String Type;
 
-    private Collection<ASTIdentifierNode> _children = new HashSet<>();
+    private Collection<ASTIdentifierNode> _children = new ArrayList<>();
 
     public ASTIdentifierNode(String name, IdentifierKind kind, String type) {
         Name = name;
@@ -18,7 +17,7 @@ public class ASTIdentifierNode {
     }
 
     public ASTIdentifierNode(String name, IdentifierKind kind) {
-        this(name, kind,null);
+        this(name, kind, null);
     }
 
     public void addChild(ASTIdentifierNode child) {
@@ -27,6 +26,20 @@ public class ASTIdentifierNode {
 
     public Collection<ASTIdentifierNode> getChildren() {
         return _children;
+    }
+
+    public ASTIdentifierNode collapse() {
+        return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ASTIdentifierNode)) return false;
+        ASTIdentifierNode that = (ASTIdentifierNode) o;
+        return Objects.equals(Name, that.Name) &&
+                Kind == that.Kind &&
+                Objects.equals(Type, that.Type);
     }
 
 }
