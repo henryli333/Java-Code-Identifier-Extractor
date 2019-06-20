@@ -26,7 +26,7 @@ public class SimpleOutputFormatter implements IOutputFormatter {
         childList.sort((o1, o2) -> {
             int x = 1;
             assert x == 1 : "test";
-            if (o1.Kind.ordinal() > o2.Kind.ordinal())
+            if (o1.Kind.ordinal() < o2.Kind.ordinal())
                 return -1;
             else if (o1.Kind.ordinal() == o2.Kind.ordinal()) {
                 return o1.Name.compareTo(o2.Name);
