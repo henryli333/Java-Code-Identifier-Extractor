@@ -3,6 +3,7 @@ package output;
 import output.interfaces.IOutputFormatter;
 import model.ASTIdentifierNode;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,8 @@ public class SimpleOutputFormatter implements IOutputFormatter {
 
         List<ASTIdentifierNode> childList = new ArrayList<>(node.getChildren());
         childList.sort((o1, o2) -> {
+            int x = 1;
+            assert x == 1 : "test";
             if (o1.Kind.ordinal() > o2.Kind.ordinal())
                 return -1;
             else if (o1.Kind.ordinal() == o2.Kind.ordinal()) {
@@ -56,8 +59,11 @@ public class SimpleOutputFormatter implements IOutputFormatter {
             case CONSTRUCTOR:
                 prefix = "Constructor: ";
                 break;
+            case PARAMETER:
+                prefix = "Parameter: ";
+                break;
             case VARIABLE:
-                prefix = "Variable name: ";
+                prefix = "Variable: ";
                 break;
             // Don't print root node; only its children are important
             case ROOT:
@@ -71,5 +77,10 @@ public class SimpleOutputFormatter implements IOutputFormatter {
 
     private boolean nullOrEmpty(String s) {
         return s == null || s.isEmpty();
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }
