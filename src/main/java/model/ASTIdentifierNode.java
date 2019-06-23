@@ -28,8 +28,14 @@ public class ASTIdentifierNode {
         return _children;
     }
 
-    public ASTIdentifierNode collapse() {
-        return null;
+    public static int ordinalCompare(ASTIdentifierNode o1, ASTIdentifierNode o2) {
+        if (o1.Kind.ordinal() < o2.Kind.ordinal())
+            return -1;
+        else if (o1.Kind.ordinal() == o2.Kind.ordinal()) {
+            return o1.Name.compareTo(o2.Name);
+        } else {
+            return 1;
+        }
     }
 
     @Override
