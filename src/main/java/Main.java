@@ -5,21 +5,25 @@ import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.utils.SourceRoot;
 
-import output.interfaces.IOutputFormatter;
+import output.JsonOutputFormatter;
+import output.SimpleOutputFormatter;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
-import output.SimpleOutputFormatter;
+import output.interfaces.OutputFormatter;
 import visitor.IdentifierExtractorVisitor;
 
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Main {
+
+    enum Formatter {
+        TABULATED,
+        JSON
+    }
+
+    private static final Formatter FORMATTER_TYPE = Formatter.JSON;
 
     public static void main(String[] args) throws Exception {
 
@@ -41,15 +45,13 @@ public class Main {
             }
         }
 
-        try (IOutputFormatter formatter = new SimpleOutputFormatter()) {
-            formatter.print(root);
+        try (OutputFormatter formatter = getFormatter(FORMATTER_TYPE)) {
+            System.out.println(formatter.format(root));
         }
         catch (IOException e) {
-            int y = 11;
             e.printStackTrace();
         }
         finally {
-            int y = 0;
             System.out.println("\nDone");
         }
 
@@ -63,21 +65,15 @@ public class Main {
         // IDEA: make this a command line application that can print to stdout and be piped into analysis program
     }
 
-    private static List<File> getAllJavaFilesFromRoot(File rootDir) {
-
-        List<File> javaFiles = new ArrayList<>();
-        javaFiles.addAll(Arrays.asList(rootDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".java");
-            }
-        })));
-
-        for (File dir : rootDir.listFiles((dir, name) -> Paths.get(dir.toString(), name).toFile().isDirectory())) {
-            javaFiles.addAll(getAllJavaFilesFromRoot(dir));
+    private static OutputFormatter getFormatter(Formatter f) {
+        switch (f) {
+            case TABULATED:
+                return new SimpleOutputFormatter();
+            case JSON:
+                return new JsonOutputFormatter();
+            default:
+                return new JsonOutputFormatter();
         }
-
-        return javaFiles;
     }
 
 }

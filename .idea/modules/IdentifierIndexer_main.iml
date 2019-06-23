@@ -9,7 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Gradle: :tools:" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.5" level="project" />
     <orderEntry type="library" name="Gradle: com.github.javaparser:javaparser-symbol-solver-core:3.14.3" level="project" />
     <orderEntry type="library" name="Gradle: com.github.javaparser:javaparser-symbol-solver-logic:3.14.3" level="project" />
     <orderEntry type="library" name="Gradle: com.github.javaparser:javaparser-symbol-solver-model:3.14.3" level="project" />

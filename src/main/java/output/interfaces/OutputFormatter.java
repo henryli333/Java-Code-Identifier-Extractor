@@ -5,8 +5,8 @@ import model.ASTIdentifierNode;
 import java.io.Closeable;
 import java.io.IOException;
 
-public interface IOutputFormatter extends Closeable {
+public interface OutputFormatter extends Closeable {
 
-    void print(ASTIdentifierNode root) throws IOException;
+    String format(ASTIdentifierNode root);
 
 }
