@@ -1,3 +1,4 @@
+import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 
@@ -10,59 +11,89 @@ import output.SimpleOutputFormatter;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
 import output.interfaces.OutputFormatter;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 import visitor.IdentifierExtractorVisitor;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class Main {
+@Command(name = "JavaIdentifierExtractor", description = "Looks at Java source code and extracts code identifiers for methods")
+public class Main implements Runnable {
 
     enum Formatter {
         TABULATED,
         JSON
     }
 
-    private static final Formatter FORMATTER_TYPE = Formatter.JSON;
+    @Option(names = {"-f", "--format"}, description = "Format from: ${COMPLETION-CANDIDATES}\n(default: ${DEFAULT-VALUE})")
+    private Formatter formatterType = Formatter.JSON;
 
-    public static void main(String[] args) throws Exception {
+    @Option(names = {"-r", "--recursive"}, description = "Recursively inspect directories")
+    private boolean isRecursive;
 
-        // TODO: Take from args? Also preferably recursive option would be nice (see below)
-        String rootFile = System.getProperty("user.dir");
+    @Option(names = { "-h", "--help" }, usageHelp = true, description = "Displays a help message")
+    private boolean helpRequested;
 
-        SourceRoot sourceRoot = new SourceRoot(Paths.get(rootFile));
-        JavaSymbolSolver symbolSolver = new JavaSymbolSolver(new JavaParserTypeSolver(rootFile));
-        sourceRoot.getParserConfiguration().setSymbolResolver(symbolSolver);
+    @Parameters(paramLabel = "ROOT-PATHS", description = "1 or more files/directories for inspection", arity = "1..*")
+    private String[] rootDirs;
 
-        List<ParseResult<CompilationUnit>> compilationUnits = sourceRoot.tryToParse();
+    public static void main(String[] args) {
+        CommandLine cli = new CommandLine(new Main());
+        cli.setCaseInsensitiveEnumValuesAllowed(true);
+
+        int exitCode = cli.execute(args);
+        System.exit(exitCode);
+    }
+
+    @Override
+    public void run() {
 
         ASTIdentifierNode root = new ASTIdentifierNode("root", IdentifierKind.ROOT);
 
-        for (ParseResult<CompilationUnit> pr : compilationUnits) {
-            if (pr.getResult().isPresent()) {
-                CompilationUnit cu = pr.getResult().get();
-                cu.accept(new IdentifierExtractorVisitor(cu), root);
+        if (isRecursive) {
+            for (String dir : rootDirs) {
+                SourceRoot sourceRoot = new SourceRoot(Paths.get(dir).toAbsolutePath().normalize());
+                JavaSymbolSolver symbolSolver = new JavaSymbolSolver(new JavaParserTypeSolver(dir));
+                sourceRoot.getParserConfiguration().setSymbolResolver(symbolSolver);
+
+                try {
+                    List<ParseResult<CompilationUnit>> compilationUnits = sourceRoot.tryToParse();
+
+                    for (ParseResult<CompilationUnit> pr : compilationUnits) {
+                        if (pr.getResult().isPresent()) {
+                            CompilationUnit cu = pr.getResult().get();
+                            cu.accept(new IdentifierExtractorVisitor(cu), root);
+                        }
+                    }
+
+                    output(root);
+                }
+                catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            }
+        }
+        else {
+            for (String dir : rootDirs) {
+                try {
+                    CompilationUnit cu = new JavaParser().parse(Paths.get(dir)).getResult().get();
+                    cu.accept(new IdentifierExtractorVisitor(cu), root);
+                }
+                catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+
+                output(root);
             }
         }
 
-        try (OutputFormatter formatter = getFormatter(FORMATTER_TYPE)) {
-            System.out.println(formatter.format(root));
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally {
-            System.out.println("\nDone");
-        }
 
-        /*YamlPrinter printer = new YamlPrinter(true);
-        for (ParseResult<CompilationUnit> pr : compilationUnits) {
-            if (pr.getResult().isPresent()) {
-                System.out.println(printer.output(pr.getResult().get()));
-            }
-        }*/
 
-        // IDEA: make this a command line application that can print to stdout and be piped into analysis program
+
     }
 
     private static OutputFormatter getFormatter(Formatter f) {
@@ -74,6 +105,26 @@ public class Main {
             default:
                 return new JsonOutputFormatter();
         }
+    }
+
+    private void output(ASTIdentifierNode root) {
+
+        try (OutputFormatter formatter = getFormatter(formatterType)) {
+            System.out.println(formatter.format(root));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            System.out.println("\nDone");
+        }
+
+                /*YamlPrinter printer = new YamlPrinter(true);
+                for (ParseResult<CompilationUnit> pr : compilationUnits) {
+                    if (pr.getResult().isPresent()) {
+                        System.out.println(printer.output(pr.getResult().get()));
+                    }
+                }*/
     }
 
 }
