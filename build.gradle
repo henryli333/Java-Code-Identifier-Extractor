@@ -25,3 +25,9 @@ jar {
 shadowJar {
     configurations = [project.configurations.compile]
 }
+
+task buildFat {
+    group = 'build'
+    dependsOn build
+    dependsOn shadowJar
+}
