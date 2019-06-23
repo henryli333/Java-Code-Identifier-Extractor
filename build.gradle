@@ -1,12 +1,27 @@
-apply plugin: 'idea'
-apply plugin: 'java'
+plugins {
+    id "java"
+    id "idea"
+    id 'com.github.johnrengelman.shadow' version '5.0.0'
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.8.5'
-    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.14.3'
+    compile 'com.google.code.gson:gson:2.8.5'
+    compile 'com.github.javaparser:javaparser-symbol-solver-core:3.14.3'
     compile 'info.picocli:picocli:4.0.0-beta-2'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'Main'
+        )
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.compile]
 }

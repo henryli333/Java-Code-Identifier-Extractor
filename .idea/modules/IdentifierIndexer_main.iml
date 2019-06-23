@@ -9,9 +9,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Gradle: info.picocli:picocli:4.0.0-beta-2" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.5" level="project" />
     <orderEntry type="library" name="Gradle: com.github.javaparser:javaparser-symbol-solver-core:3.14.3" level="project" />
+    <orderEntry type="library" name="Gradle: info.picocli:picocli:4.0.0-beta-2" level="project" />
     <orderEntry type="library" name="Gradle: com.github.javaparser:javaparser-symbol-solver-logic:3.14.3" level="project" />
     <orderEntry type="library" name="Gradle: com.github.javaparser:javaparser-symbol-solver-model:3.14.3" level="project" />
     <orderEntry type="library" name="Gradle: org.javassist:javassist:3.24.0-GA" level="project" />
