@@ -19,6 +19,7 @@ import visitor.IdentifierExtractorVisitor;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Command(name = "JavaIdentifierExtractor", description = "Looks at Java source code and extracts code identifiers for methods")
@@ -53,46 +54,43 @@ public class Main implements Runnable {
     public void run() {
 
         ASTIdentifierNode root = new ASTIdentifierNode("root", IdentifierKind.ROOT);
+        List<ParseResult<CompilationUnit>> compilationUnits = null;
 
-        if (isRecursive) {
-            for (String dir : rootDirs) {
+        for (String dir : rootDirs) {
+            if (isRecursive) {
                 SourceRoot sourceRoot = new SourceRoot(Paths.get(dir).toAbsolutePath().normalize());
-                JavaSymbolSolver symbolSolver = new JavaSymbolSolver(new JavaParserTypeSolver(dir));
-                sourceRoot.getParserConfiguration().setSymbolResolver(symbolSolver);
 
                 try {
-                    List<ParseResult<CompilationUnit>> compilationUnits = sourceRoot.tryToParse();
+                    compilationUnits = sourceRoot.tryToParse();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
 
-                    for (ParseResult<CompilationUnit> pr : compilationUnits) {
-                        if (pr.getResult().isPresent()) {
-                            CompilationUnit cu = pr.getResult().get();
-                            cu.accept(new IdentifierExtractorVisitor(cu), root);
-                        }
-                    }
-
-                    output(root);
+            }
+            else {
+                try {
+                    compilationUnits = new ArrayList<>();
+                    compilationUnits.add(new JavaParser().parse(Paths.get(dir)));
                 }
                 catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
             }
-        }
-        else {
-            for (String dir : rootDirs) {
-                try {
-                    CompilationUnit cu = new JavaParser().parse(Paths.get(dir)).getResult().get();
+
+            if (compilationUnits == null) {
+                // TODO: Better handling of error cases
+                continue;
+            }
+
+            for (ParseResult<CompilationUnit> pr : compilationUnits) {
+                if (pr.getResult().isPresent()) {
+                    CompilationUnit cu = pr.getResult().get();
                     cu.accept(new IdentifierExtractorVisitor(cu), root);
                 }
-                catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
-
-                output(root);
             }
+
+            output(root);
         }
-
-
-
 
     }
 
