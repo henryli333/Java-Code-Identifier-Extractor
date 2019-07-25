@@ -1,5 +1,7 @@
-install: gradle wrapper --gradle-version 4.9
+before_install:
+  - gradle -b install-wrapper.gradle wrapper
 language: java
 jdk: oraclejdk8
 script:
-- gradle check
+- ./gradlew check
+dist: trusty
