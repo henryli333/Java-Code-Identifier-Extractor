@@ -53,7 +53,7 @@ public class Main implements Runnable {
     @Override
     public void run() {
 
-        ASTIdentifierNode root = new ASTIdentifierNode("root", IdentifierKind.ROOT, 0);
+        ASTIdentifierNode root = new ASTIdentifierNode("root", IdentifierKind.ROOT, 0, 0);
         List<ParseResult<CompilationUnit>> compilationUnits = null;
 
         for (String dir : rootDirs) {

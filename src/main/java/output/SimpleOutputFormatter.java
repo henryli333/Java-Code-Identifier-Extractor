@@ -62,7 +62,7 @@ public class SimpleOutputFormatter implements OutputFormatter {
                 throw new RuntimeException("Are you missing a case?");
         }
 
-        return prefix + (nullOrEmpty(node.Type) ? String.format("%s [%d]", node.Name, node.StartingLine) : String.format("(%s) %s [%d]", node.Type, node.Name, node.StartingLine));
+        return prefix + (nullOrEmpty(node.Type) ? String.format("%s [%d-%d]", node.Name, node.StartingLine, node.EndingLine) : String.format("(%s) %s [%d-%d]", node.Type, node.Name, node.StartingLine, node.EndingLine));
     }
 
     private boolean nullOrEmpty(String s) {
