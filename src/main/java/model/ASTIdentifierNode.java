@@ -7,19 +7,21 @@ public class ASTIdentifierNode {
     public final String Name;
     public final IdentifierKind Kind;
     public final int StartingLine;
+    public final int EndingLine;
     public final String Type;
 
     private Collection<ASTIdentifierNode> _children = new ArrayList<>();
 
-    public ASTIdentifierNode(String name, IdentifierKind kind, int startingLine, String type) {
+    public ASTIdentifierNode(String name, IdentifierKind kind, int startingLine, int endingLine, String type) {
         Name = name;
         Kind = kind;
         StartingLine = startingLine;
+        EndingLine = endingLine;
         Type = type;
     }
 
-    public ASTIdentifierNode(String name, IdentifierKind kind, int startingLine) {
-        this(name, kind, startingLine, null);
+    public ASTIdentifierNode(String name, IdentifierKind kind, int startingLine, int endingLine) {
+        this(name, kind, startingLine, endingLine, null);
     }
 
     public void addChild(ASTIdentifierNode child) {
