@@ -21,10 +21,11 @@ public class SimpleOutputFormatter implements OutputFormatter {
             sb.append("\t");
         }
 
-        sb.append(printNode(node) + "\n");
+        sb.append(printNode(node));
+        sb.append("\n");
 
         List<ASTIdentifierNode> childList = new ArrayList<>(node.getChildren());
-        childList.sort(ASTIdentifierNode::ordinalCompare);
+        childList.sort(ASTIdentifierNode::compare);
 
         for (ASTIdentifierNode child : childList) {
             formatRecursive(child, depth + 1, sb);
@@ -61,7 +62,7 @@ public class SimpleOutputFormatter implements OutputFormatter {
                 throw new RuntimeException("Are you missing a case?");
         }
 
-        return prefix + (nullOrEmpty(node.Type) ? "" : "(" + node.Type + ") ") + node.Name;
+        return prefix + (nullOrEmpty(node.Type) ? String.format("%s [%d]", node.Name, node.StartingLine) : String.format("(%s) %s [%d]", node.Type, node.Name, node.StartingLine));
     }
 
     private boolean nullOrEmpty(String s) {

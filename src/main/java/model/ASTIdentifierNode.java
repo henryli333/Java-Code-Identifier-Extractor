@@ -6,18 +6,20 @@ public class ASTIdentifierNode {
 
     public final String Name;
     public final IdentifierKind Kind;
+    public final int StartingLine;
     public final String Type;
 
     private Collection<ASTIdentifierNode> _children = new ArrayList<>();
 
-    public ASTIdentifierNode(String name, IdentifierKind kind, String type) {
+    public ASTIdentifierNode(String name, IdentifierKind kind, int startingLine, String type) {
         Name = name;
         Kind = kind;
+        StartingLine = startingLine;
         Type = type;
     }
 
-    public ASTIdentifierNode(String name, IdentifierKind kind) {
-        this(name, kind, null);
+    public ASTIdentifierNode(String name, IdentifierKind kind, int startingLine) {
+        this(name, kind, startingLine, null);
     }
 
     public void addChild(ASTIdentifierNode child) {
@@ -28,14 +30,8 @@ public class ASTIdentifierNode {
         return _children;
     }
 
-    public static int ordinalCompare(ASTIdentifierNode o1, ASTIdentifierNode o2) {
-        if (o1.Kind.ordinal() < o2.Kind.ordinal())
-            return -1;
-        else if (o1.Kind.ordinal() == o2.Kind.ordinal()) {
-            return o1.Name.compareTo(o2.Name);
-        } else {
-            return 1;
-        }
+    public static int compare(ASTIdentifierNode o1, ASTIdentifierNode o2) {
+        return o1.StartingLine - o2.StartingLine;
     }
 
     @Override
@@ -45,6 +41,7 @@ public class ASTIdentifierNode {
         ASTIdentifierNode that = (ASTIdentifierNode) o;
         return Objects.equals(Name, that.Name) &&
                 Kind == that.Kind &&
+                StartingLine == that.StartingLine &&
                 Objects.equals(Type, that.Type);
     }
 

@@ -15,7 +15,7 @@ public class JsonOutputFormatter implements OutputFormatter {
         Gson gson = new Gson();
 
         List<ASTIdentifierNode> childList = new ArrayList<>(root.getChildren());
-        childList.sort(ASTIdentifierNode::ordinalCompare);
+        childList.sort(ASTIdentifierNode::compare);
 
         return gson.toJson(root);
     }

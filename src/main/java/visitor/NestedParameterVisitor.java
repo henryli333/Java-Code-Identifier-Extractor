@@ -13,7 +13,7 @@ public class NestedParameterVisitor extends IdentifierExtractorVisitor {
 
     @Override
     public Void visit(Parameter u, ASTIdentifierNode p) {
-        ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.VARIABLE, u.getType() instanceof UnknownType ? "`inferred type`" : u.getTypeAsString());
+        ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.VARIABLE, u.getBegin().get().line, u.getType() instanceof UnknownType ? "`inferred type`" : u.getTypeAsString());
         p.addChild(variableNode);
 
         return null;
