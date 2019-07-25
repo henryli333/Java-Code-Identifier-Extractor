@@ -2,6 +2,8 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.utils.SourceRoot;
 
 import output.JsonOutputFormatter;
@@ -51,12 +53,14 @@ public class Main implements Runnable {
     @Override
     public void run() {
 
-        ASTIdentifierNode root = new ASTIdentifierNode("root", IdentifierKind.ROOT);
+        ASTIdentifierNode root = new ASTIdentifierNode("root", IdentifierKind.ROOT, 0);
         List<ParseResult<CompilationUnit>> compilationUnits = null;
 
         for (String dir : rootDirs) {
             if (isRecursive) {
                 SourceRoot sourceRoot = new SourceRoot(Paths.get(dir).toAbsolutePath().normalize());
+                JavaSymbolSolver symbolSolver = new JavaSymbolSolver(new JavaParserTypeSolver(Paths.get(dir).toAbsolutePath().normalize()));
+                sourceRoot.getParserConfiguration().setSymbolResolver(symbolSolver);
 
                 try {
                     compilationUnits = sourceRoot.tryToParse();
@@ -68,7 +72,9 @@ public class Main implements Runnable {
             else {
                 try {
                     compilationUnits = new ArrayList<>();
-                    compilationUnits.add(new JavaParser().parse(Paths.get(dir)));
+                    JavaParser parser = new JavaParser();
+                    parser.getParserConfiguration().setSymbolResolver(new JavaSymbolSolver(new JavaParserTypeSolver(Paths.get(dir))));
+                    compilationUnits.add(parser.parse(Paths.get(dir)));
                 }
                 catch (IOException ioe) {
                     ioe.printStackTrace();
