@@ -44,6 +44,7 @@ public class ASTIdentifierNode {
         return Objects.equals(Name, that.Name) &&
                 Kind == that.Kind &&
                 StartingLine == that.StartingLine &&
+                EndingLine == that.EndingLine &&
                 Objects.equals(Type, that.Type);
     }
 
