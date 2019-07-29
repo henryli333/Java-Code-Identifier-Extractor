@@ -19,7 +19,6 @@ import picocli.CommandLine.Parameters;
 import visitor.IdentifierExtractorVisitor;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +35,15 @@ public class Main implements Runnable {
     private Formatter formatterType = Formatter.JSON;
 
     @Option(names = {"-r", "--recursive"}, description = "Recursively inspect directories")
+    @SuppressWarnings({"UnusedDeclaration"})
     private boolean isRecursive;
 
     @Option(names = { "-h", "--help" }, usageHelp = true, description = "Displays a help message")
+    @SuppressWarnings({"UnusedDeclaration"})
     private boolean helpRequested;
 
     @Parameters(paramLabel = "ROOT-PATHS", description = "1 or more files/directories for inspection", arity = "1..*")
+    @SuppressWarnings({"UnusedDeclaration"})
     private String[] rootDirs;
 
     public static void main(String[] args) {
