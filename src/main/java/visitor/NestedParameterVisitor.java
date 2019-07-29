@@ -8,7 +8,7 @@ import model.IdentifierKind;
 public class NestedParameterVisitor extends IdentifierExtractorVisitor {
 
     public NestedParameterVisitor(IdentifierExtractorVisitor visitor) {
-        super(visitor._cu);
+        super(visitor._cu, visitor._ts);
     }
 
     @Override
