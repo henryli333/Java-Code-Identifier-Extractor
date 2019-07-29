@@ -52,6 +52,9 @@ public class SimpleOutputFormatter implements OutputFormatter {
             case PARAMETER:
                 prefix = "Parameter: ";
                 break;
+            case FIELD:
+                prefix = "Field: ";
+                break;
             case VARIABLE:
                 prefix = "Variable: ";
                 break;

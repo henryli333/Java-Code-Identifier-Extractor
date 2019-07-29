@@ -2,21 +2,31 @@ package visitor;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.*;
-import com.github.javaparser.ast.expr.LambdaExpr;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.CatchClause;
+import com.github.javaparser.ast.stmt.TryStmt;
 import com.github.javaparser.ast.type.UnknownType;
 import com.github.javaparser.ast.visitor.GenericVisitorAdapter;
+import com.github.javaparser.resolution.UnsolvedSymbolException;
+import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
+import com.github.javaparser.resolution.types.ResolvedType;
+import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
+import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
+
+import java.lang.reflect.Field;
 
 public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTIdentifierNode> {
 
     public static final String DEFAULT_PACKAGE_NAME = "<default package>";
 
     protected final CompilationUnit _cu;
+    protected final TypeSolver _ts;
 
-    public IdentifierExtractorVisitor(CompilationUnit cu) {
+    public IdentifierExtractorVisitor(CompilationUnit cu, TypeSolver ts) {
         _cu = cu;
+        _ts = ts;
     }
 
     @Override
@@ -91,7 +101,7 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
     @Override
     public Void visit(VariableDeclarator u, ASTIdentifierNode p) {
-        ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.VARIABLE, u.getBegin().get().line, u.getEnd().get().line, u.getTypeAsString());
+        ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), p.Kind == IdentifierKind.CLASS ? IdentifierKind.FIELD : IdentifierKind.VARIABLE, u.getBegin().get().line, u.getEnd().get().line, u.getTypeAsString());
         p.addChild(variableNode);
 
         return null;
@@ -129,6 +139,39 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
     public Void visit(CatchClause u, ASTIdentifierNode p) {
         u.getParameter().accept(new NestedParameterVisitor(this), p);
         u.getBody().accept(this, p);
+        return null;
+    }
+
+    @Override
+    public Void visit(NameExpr u, ASTIdentifierNode p) {
+
+        ResolvedValueDeclaration rvd;
+
+        try {
+            rvd = JavaParserFacade.get(_ts).solve(u).getCorrespondingDeclaration();
+        }
+        catch (Exception e) {
+            rvd = null;
+        }
+
+        if (rvd == null) {
+            return null;
+        }
+
+        if (rvd.isField()) {
+            String name = rvd.getName();
+            String type = "<unknown type>";
+
+            try {
+                type = rvd.getType().describe();
+            }
+            catch (UnsolvedSymbolException use) {
+            }
+
+            ASTIdentifierNode fieldNode = new ASTIdentifierNode(name, IdentifierKind.FIELD, u.getBegin().get().line, u.getEnd().get().line, type);
+            p.addChild(fieldNode);
+        }
+
         return null;
     }
 }

@@ -3,6 +3,7 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.utils.SourceRoot;
 
@@ -18,6 +19,7 @@ import picocli.CommandLine.Parameters;
 import visitor.IdentifierExtractorVisitor;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,15 +59,19 @@ public class Main implements Runnable {
         List<ParseResult<CompilationUnit>> compilationUnits = null;
 
         for (String dir : rootDirs) {
+
+            TypeSolver typeSolver;
+
             if (isRecursive) {
                 SourceRoot sourceRoot = new SourceRoot(Paths.get(dir).toAbsolutePath().normalize());
-                JavaSymbolSolver symbolSolver = new JavaSymbolSolver(new JavaParserTypeSolver(Paths.get(dir).toAbsolutePath().normalize()));
-                sourceRoot.getParserConfiguration().setSymbolResolver(symbolSolver);
+                typeSolver = new JavaParserTypeSolver(Paths.get(dir).toAbsolutePath().normalize());
+                sourceRoot.getParserConfiguration().setSymbolResolver(new JavaSymbolSolver(typeSolver));
 
                 try {
                     compilationUnits = sourceRoot.tryToParse();
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
+                    typeSolver = null;
                 }
 
             }
@@ -73,11 +79,13 @@ public class Main implements Runnable {
                 try {
                     compilationUnits = new ArrayList<>();
                     JavaParser parser = new JavaParser();
-                    parser.getParserConfiguration().setSymbolResolver(new JavaSymbolSolver(new JavaParserTypeSolver(Paths.get(dir))));
+                    typeSolver = new JavaParserTypeSolver(Paths.get(dir).getParent());
+                    parser.getParserConfiguration().setSymbolResolver(new JavaSymbolSolver(typeSolver));
                     compilationUnits.add(parser.parse(Paths.get(dir)));
                 }
                 catch (IOException ioe) {
                     ioe.printStackTrace();
+                    typeSolver = null;
                 }
             }
 
@@ -89,7 +97,7 @@ public class Main implements Runnable {
             for (ParseResult<CompilationUnit> pr : compilationUnits) {
                 if (pr.getResult().isPresent()) {
                     CompilationUnit cu = pr.getResult().get();
-                    cu.accept(new IdentifierExtractorVisitor(cu), root);
+                    cu.accept(new IdentifierExtractorVisitor(cu, typeSolver), root);
                 }
             }
 
@@ -117,16 +125,6 @@ public class Main implements Runnable {
         catch (IOException e) {
             e.printStackTrace();
         }
-        finally {
-            System.out.println("\nDone");
-        }
-
-                /*YamlPrinter printer = new YamlPrinter(true);
-                for (ParseResult<CompilationUnit> pr : compilationUnits) {
-                    if (pr.getResult().isPresent()) {
-                        System.out.println(printer.output(pr.getResult().get()));
-                    }
-                }*/
     }
 
 }
