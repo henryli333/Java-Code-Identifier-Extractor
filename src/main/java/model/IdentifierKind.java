@@ -8,5 +8,6 @@ public enum IdentifierKind {
     METHOD,
     CONSTRUCTOR,
     PARAMETER,
+    FIELD,
     VARIABLE
 }
