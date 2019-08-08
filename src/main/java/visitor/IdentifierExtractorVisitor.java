@@ -32,7 +32,14 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
     @Override
     public Void visit(CompilationUnit u, ASTIdentifierNode p) {
 
-        ASTIdentifierNode compilationUnitNode = new ASTIdentifierNode(u.getPackageDeclaration().isPresent() ? u.getPackageDeclaration().get().getName().asString() : DEFAULT_PACKAGE_NAME, IdentifierKind.PACKAGE, u.getBegin().get().line, u.getEnd().get().line);
+        ASTIdentifierNode compilationUnitNode =
+                new ASTIdentifierNode(
+                        u.getPackageDeclaration().isPresent() ? u.getPackageDeclaration().get().getName().asString() : DEFAULT_PACKAGE_NAME,
+                        IdentifierKind.PACKAGE,
+                        u.getBegin().get().line,
+                        u.getEnd().get().line
+                );
+
         p.addChild(compilationUnitNode);
 
         u.getTypes().accept(this, compilationUnitNode);
@@ -43,7 +50,14 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
     @Override
     public Void visit(ClassOrInterfaceDeclaration u, ASTIdentifierNode p) {
 
-        ASTIdentifierNode classNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.CLASS, u.getBegin().get().line, u.getEnd().get().line);
+        ASTIdentifierNode classNode =
+                new ASTIdentifierNode(
+                        u.getNameAsString(),
+                        IdentifierKind.CLASS,
+                        u.getBegin().get().line,
+                        u.getEnd().get().line
+                );
+
         p.addChild(classNode);
 
         u.getMembers().accept(this, classNode);
@@ -54,7 +68,14 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
     @Override
     public Void visit(EnumDeclaration u, ASTIdentifierNode p) {
-        ASTIdentifierNode classNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.CLASS, u.getBegin().get().line, u.getEnd().get().line);
+        ASTIdentifierNode classNode =
+                new ASTIdentifierNode(
+                        u.getNameAsString(),
+                        IdentifierKind.CLASS,
+                        u.getBegin().get().line,
+                        u.getEnd().get().line
+                );
+
         p.addChild(classNode);
 
         u.getEntries().accept(this, classNode);
@@ -65,7 +86,15 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
     @Override
     public Void visit(EnumConstantDeclaration u, ASTIdentifierNode p) {
-        ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.VARIABLE, u.getBegin().get().line, u.getEnd().get().line, p.Name);
+        ASTIdentifierNode variableNode =
+                new ASTIdentifierNode(
+                        u.getNameAsString(),
+                        IdentifierKind.VARIABLE,
+                        u.getBegin().get().line,
+                        u.getEnd().get().line,
+                        p.Name
+                );
+
         p.addChild(variableNode);
 
         return null;
@@ -74,7 +103,14 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
     @Override
     public Void visit(MethodDeclaration u, ASTIdentifierNode p) {
 
-        ASTIdentifierNode methodNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.METHOD, u.getBegin().get().line, u.getEnd().get().line, u.getTypeAsString());
+        ASTIdentifierNode methodNode =
+                new ASTIdentifierNode(
+                        u.getNameAsString(),
+                        IdentifierKind.METHOD,
+                        u.getBegin().get().line,
+                        u.getEnd().get().line,
+                        u.getTypeAsString()
+                );
 
         p.addChild(methodNode);
 
@@ -89,7 +125,14 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
     @Override
     public Void visit(ConstructorDeclaration u, ASTIdentifierNode p) {
-        ASTIdentifierNode methodNode = new ASTIdentifierNode("`constructor`", IdentifierKind.CONSTRUCTOR, u.getBegin().get().line, u.getEnd().get().line, u.getNameAsString());
+        ASTIdentifierNode methodNode =
+                new ASTIdentifierNode(
+                        "`constructor`",
+                        IdentifierKind.CONSTRUCTOR,
+                        u.getBegin().get().line,
+                        u.getEnd().get().line,
+                        u.getNameAsString()
+                );
 
         p.addChild(methodNode);
 
@@ -101,7 +144,15 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
     @Override
     public Void visit(VariableDeclarator u, ASTIdentifierNode p) {
-        ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), p.Kind == IdentifierKind.CLASS ? IdentifierKind.FIELD : IdentifierKind.VARIABLE, u.getBegin().get().line, u.getEnd().get().line, u.getTypeAsString());
+        ASTIdentifierNode variableNode =
+                new ASTIdentifierNode(
+                        u.getNameAsString(),
+                        p.Kind == IdentifierKind.CLASS ? IdentifierKind.FIELD : IdentifierKind.VARIABLE,
+                        u.getBegin().get().line,
+                        u.getEnd().get().line,
+                        u.getTypeAsString()
+                );
+
         p.addChild(variableNode);
 
         return null;
@@ -109,7 +160,15 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
     @Override
     public Void visit(Parameter u, ASTIdentifierNode p) {
-        ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.PARAMETER, u.getBegin().get().line, u.getEnd().get().line, u.getTypeAsString());
+        ASTIdentifierNode variableNode =
+                new ASTIdentifierNode(
+                        u.getNameAsString(),
+                        IdentifierKind.PARAMETER,
+                        u.getBegin().get().line,
+                        u.getEnd().get().line,
+                        u.getTypeAsString()
+                );
+
         p.addChild(variableNode);
 
         return null;
@@ -117,15 +176,7 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
     @Override
     public Void visit(LambdaExpr u, ASTIdentifierNode p) {
-        u.getParameters().accept(new NestedParameterVisitor(this) {
-            @Override
-            public Void visit(Parameter u, ASTIdentifierNode p) {
-                ASTIdentifierNode variableNode = new ASTIdentifierNode(u.getNameAsString(), IdentifierKind.VARIABLE, u.getBegin().get().line, u.getEnd().get().line, u.getType() instanceof UnknownType ? "`inferred type`" : u.getTypeAsString());
-                p.addChild(variableNode);
-
-                return null;
-            }
-        }, p);
+        u.getParameters().accept(new NestedParameterVisitor(this), p);
 
         u.getBody().accept(this, p);
         if (u.getExpressionBody().isPresent()) {
@@ -160,7 +211,7 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
         if (rvd.isField()) {
             String name = rvd.getName();
-            String type = "<unknown type>";
+            String type = null;
 
             try {
                 type = rvd.getType().describe();
@@ -168,7 +219,15 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
             catch (UnsolvedSymbolException use) {
             }
 
-            ASTIdentifierNode fieldNode = new ASTIdentifierNode(name, IdentifierKind.FIELD, u.getBegin().get().line, u.getEnd().get().line, type);
+            ASTIdentifierNode fieldNode =
+                    new ASTIdentifierNode(
+                            name,
+                            IdentifierKind.FIELD,
+                            u.getBegin().get().line,
+                            u.getEnd().get().line,
+                            type
+                    );
+
             p.addChild(fieldNode);
         }
 

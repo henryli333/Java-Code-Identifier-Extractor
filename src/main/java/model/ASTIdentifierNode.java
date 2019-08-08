@@ -24,6 +24,10 @@ public class ASTIdentifierNode {
         this(name, kind, startingLine, endingLine, null);
     }
 
+    public ASTIdentifierNode(String name, IdentifierKind kind) {
+        this(name, kind, 0, 0);
+    }
+
     public void addChild(ASTIdentifierNode child) {
         _children.add(child);
     }

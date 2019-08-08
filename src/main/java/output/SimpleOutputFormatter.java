@@ -34,29 +34,29 @@ public class SimpleOutputFormatter implements OutputFormatter {
 
     private String printNode(ASTIdentifierNode node) {
 
-        String prefix;
+        StringBuilder sb = new StringBuilder();
 
         switch (node.Kind) {
             case PACKAGE:
-                prefix = "Package name: ";
+                sb.append("Package name: ");
                 break;
             case CLASS:
-                prefix = "Class name: ";
+                sb.append("Class name: ");
                 break;
             case METHOD:
-                prefix = "Method name: ";
+                sb.append("Method name: ");
                 break;
             case CONSTRUCTOR:
-                prefix = "Constructor: ";
+                sb.append("Constructor: ");
                 break;
             case PARAMETER:
-                prefix = "Parameter: ";
+                sb.append("Parameter: ");
                 break;
             case FIELD:
-                prefix = "Field: ";
+                sb.append("Field: ");
                 break;
             case VARIABLE:
-                prefix = "Variable: ";
+                sb.append("Variable: ");
                 break;
             // Don't print root node; only its children are important
             case ROOT:
@@ -65,7 +65,13 @@ public class SimpleOutputFormatter implements OutputFormatter {
                 throw new RuntimeException("Are you missing a case?");
         }
 
-        return prefix + (nullOrEmpty(node.Type) ? String.format("%s [%d-%d]", node.Name, node.StartingLine, node.EndingLine) : String.format("(%s) %s [%d-%d]", node.Type, node.Name, node.StartingLine, node.EndingLine));
+        if (nullOrEmpty(node.Type)) {
+            return sb.append(String.format("%s [%d-%d]", node.Name, node.StartingLine, node.EndingLine)).toString();
+        }
+        else {
+            return sb.append(String.format("(%s) %s [%d-%d]", node.Type, node.Name, node.StartingLine, node.EndingLine)).toString();
+        }
+
     }
 
     private boolean nullOrEmpty(String s) {
