@@ -19,6 +19,7 @@ import picocli.CommandLine.Parameters;
 import visitor.IdentifierExtractorVisitor;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +58,7 @@ public class Main implements Runnable {
     @Override
     public void run() {
 
-        ASTIdentifierNode root = new ASTIdentifierNode("root", IdentifierKind.ROOT, 0, 0);
+        ASTIdentifierNode rootNode = new ASTIdentifierNode("root", IdentifierKind.ROOT);
         List<ParseResult<CompilationUnit>> compilationUnits = null;
 
         for (String dir : rootDirs) {
@@ -65,8 +66,11 @@ public class Main implements Runnable {
             TypeSolver typeSolver;
 
             if (isRecursive) {
-                SourceRoot sourceRoot = new SourceRoot(Paths.get(dir).toAbsolutePath().normalize());
-                typeSolver = new JavaParserTypeSolver(Paths.get(dir).toAbsolutePath().normalize());
+
+                Path rootPath = Paths.get(dir).toAbsolutePath().normalize();
+
+                SourceRoot sourceRoot = new SourceRoot(rootPath);
+                typeSolver = new JavaParserTypeSolver(rootPath);
                 sourceRoot.getParserConfiguration().setSymbolResolver(new JavaSymbolSolver(typeSolver));
 
                 try {
@@ -80,9 +84,11 @@ public class Main implements Runnable {
             else {
                 try {
                     compilationUnits = new ArrayList<>();
+
                     JavaParser parser = new JavaParser();
                     typeSolver = new JavaParserTypeSolver(Paths.get(dir).getParent());
                     parser.getParserConfiguration().setSymbolResolver(new JavaSymbolSolver(typeSolver));
+
                     compilationUnits.add(parser.parse(Paths.get(dir)));
                 }
                 catch (IOException ioe) {
@@ -99,11 +105,11 @@ public class Main implements Runnable {
             for (ParseResult<CompilationUnit> pr : compilationUnits) {
                 if (pr.getResult().isPresent()) {
                     CompilationUnit cu = pr.getResult().get();
-                    cu.accept(new IdentifierExtractorVisitor(cu, typeSolver), root);
+                    cu.accept(new IdentifierExtractorVisitor(cu, typeSolver), rootNode);
                 }
             }
 
-            output(root);
+            output(rootNode);
         }
 
     }
@@ -115,7 +121,7 @@ public class Main implements Runnable {
             case JSON:
                 return new JsonOutputFormatter();
             default:
-                return new JsonOutputFormatter();
+                throw new RuntimeException("No formatter specified - missing switch case?");
         }
     }
 
