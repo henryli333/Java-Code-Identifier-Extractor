@@ -4,217 +4,212 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.CatchClause;
-import com.github.javaparser.ast.stmt.TryStmt;
-import com.github.javaparser.ast.type.UnknownType;
 import com.github.javaparser.ast.visitor.GenericVisitorAdapter;
 import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
-import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
 
-import java.lang.reflect.Field;
-
 public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTIdentifierNode> {
 
     public static final String DEFAULT_PACKAGE_NAME = "<default package>";
 
-    protected final CompilationUnit _cu;
-    protected final TypeSolver _ts;
+    protected final CompilationUnit _compilationUnit;
+    protected final TypeSolver _typeSolver;
 
-    public IdentifierExtractorVisitor(CompilationUnit cu, TypeSolver ts) {
-        _cu = cu;
-        _ts = ts;
+    public IdentifierExtractorVisitor(CompilationUnit compilationUnit, TypeSolver typeSolver) {
+        _compilationUnit = compilationUnit;
+        _typeSolver = typeSolver;
     }
 
     @Override
-    public Void visit(CompilationUnit u, ASTIdentifierNode p) {
+    public Void visit(CompilationUnit ASTNode, ASTIdentifierNode identifierNode) {
 
         ASTIdentifierNode compilationUnitNode =
                 new ASTIdentifierNode(
-                        u.getPackageDeclaration().isPresent() ? u.getPackageDeclaration().get().getName().asString() : DEFAULT_PACKAGE_NAME,
+                        ASTNode.getPackageDeclaration().isPresent() ? ASTNode.getPackageDeclaration().get().getName().asString() : DEFAULT_PACKAGE_NAME,
                         IdentifierKind.PACKAGE,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line
                 );
 
-        p.addChild(compilationUnitNode);
+        identifierNode.addChild(compilationUnitNode);
 
-        u.getTypes().accept(this, compilationUnitNode);
+        ASTNode.getTypes().accept(this, compilationUnitNode);
 
         return null;
     }
 
     @Override
-    public Void visit(ClassOrInterfaceDeclaration u, ASTIdentifierNode p) {
+    public Void visit(ClassOrInterfaceDeclaration ASTNode, ASTIdentifierNode identifierNode) {
 
         ASTIdentifierNode classNode =
                 new ASTIdentifierNode(
-                        u.getNameAsString(),
+                        ASTNode.getNameAsString(),
                         IdentifierKind.CLASS,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line
                 );
 
-        p.addChild(classNode);
+        identifierNode.addChild(classNode);
 
-        u.getMembers().accept(this, classNode);
+        ASTNode.getMembers().accept(this, classNode);
 
         return null;
     }
 
 
     @Override
-    public Void visit(EnumDeclaration u, ASTIdentifierNode p) {
+    public Void visit(EnumDeclaration ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode classNode =
                 new ASTIdentifierNode(
-                        u.getNameAsString(),
+                        ASTNode.getNameAsString(),
                         IdentifierKind.CLASS,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line
                 );
 
-        p.addChild(classNode);
+        identifierNode.addChild(classNode);
 
-        u.getEntries().accept(this, classNode);
-        u.getMembers().accept(this, classNode);
+        ASTNode.getEntries().accept(this, classNode);
+        ASTNode.getMembers().accept(this, classNode);
 
         return null;
     }
 
     @Override
-    public Void visit(EnumConstantDeclaration u, ASTIdentifierNode p) {
+    public Void visit(EnumConstantDeclaration ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode variableNode =
                 new ASTIdentifierNode(
-                        u.getNameAsString(),
+                        ASTNode.getNameAsString(),
                         IdentifierKind.VARIABLE,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line,
-                        p.Name
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line,
+                        identifierNode.Name
                 );
 
-        p.addChild(variableNode);
+        identifierNode.addChild(variableNode);
 
         return null;
     }
 
     @Override
-    public Void visit(MethodDeclaration u, ASTIdentifierNode p) {
+    public Void visit(MethodDeclaration ASTNode, ASTIdentifierNode identifierNode) {
 
         ASTIdentifierNode methodNode =
                 new ASTIdentifierNode(
-                        u.getNameAsString(),
+                        ASTNode.getNameAsString(),
                         IdentifierKind.METHOD,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line,
-                        u.getTypeAsString()
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line,
+                        ASTNode.getTypeAsString()
                 );
 
-        p.addChild(methodNode);
+        identifierNode.addChild(methodNode);
 
-        u.getParameters().accept(this, methodNode);
+        ASTNode.getParameters().accept(this, methodNode);
 
-        if (u.getBody().isPresent()) {
-            u.getBody().get().accept(this, methodNode);
+        if (ASTNode.getBody().isPresent()) {
+            ASTNode.getBody().get().accept(this, methodNode);
         }
 
         return null;
     }
 
     @Override
-    public Void visit(ConstructorDeclaration u, ASTIdentifierNode p) {
+    public Void visit(ConstructorDeclaration ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode methodNode =
                 new ASTIdentifierNode(
                         "`constructor`",
                         IdentifierKind.CONSTRUCTOR,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line,
-                        u.getNameAsString()
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line,
+                        ASTNode.getNameAsString()
                 );
 
-        p.addChild(methodNode);
+        identifierNode.addChild(methodNode);
 
-        u.getParameters().accept(this, methodNode);
-        u.getBody().accept(this, methodNode);
+        ASTNode.getParameters().accept(this, methodNode);
+        ASTNode.getBody().accept(this, methodNode);
 
         return null;
     }
 
     @Override
-    public Void visit(VariableDeclarator u, ASTIdentifierNode p) {
+    public Void visit(VariableDeclarator ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode variableNode =
                 new ASTIdentifierNode(
-                        u.getNameAsString(),
-                        p.Kind == IdentifierKind.CLASS ? IdentifierKind.FIELD : IdentifierKind.VARIABLE,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line,
-                        u.getTypeAsString()
+                        ASTNode.getNameAsString(),
+                        identifierNode.Kind == IdentifierKind.CLASS ? IdentifierKind.FIELD : IdentifierKind.VARIABLE,
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line,
+                        ASTNode.getTypeAsString()
                 );
 
-        p.addChild(variableNode);
+        identifierNode.addChild(variableNode);
 
         return null;
     }
 
     @Override
-    public Void visit(Parameter u, ASTIdentifierNode p) {
+    public Void visit(Parameter ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode variableNode =
                 new ASTIdentifierNode(
-                        u.getNameAsString(),
+                        ASTNode.getNameAsString(),
                         IdentifierKind.PARAMETER,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line,
-                        u.getTypeAsString()
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line,
+                        ASTNode.getTypeAsString()
                 );
 
-        p.addChild(variableNode);
+        identifierNode.addChild(variableNode);
 
         return null;
     }
 
     @Override
-    public Void visit(LambdaExpr u, ASTIdentifierNode p) {
-        u.getParameters().accept(new NestedParameterVisitor(this), p);
+    public Void visit(LambdaExpr ASTNode, ASTIdentifierNode identifierNode) {
+        ASTNode.getParameters().accept(new NestedParameterVisitor(this), identifierNode);
 
-        u.getBody().accept(this, p);
-        if (u.getExpressionBody().isPresent()) {
-            u.getExpressionBody().get().accept(this, p);
+        ASTNode.getBody().accept(this, identifierNode);
+        if (ASTNode.getExpressionBody().isPresent()) {
+            ASTNode.getExpressionBody().get().accept(this, identifierNode);
         }
 
         return null;
     }
 
     @Override
-    public Void visit(CatchClause u, ASTIdentifierNode p) {
-        u.getParameter().accept(new NestedParameterVisitor(this), p);
-        u.getBody().accept(this, p);
+    public Void visit(CatchClause ASTNode, ASTIdentifierNode identifierNode) {
+        ASTNode.getParameter().accept(new NestedParameterVisitor(this), identifierNode);
+        ASTNode.getBody().accept(this, identifierNode);
         return null;
     }
 
     @Override
-    public Void visit(NameExpr u, ASTIdentifierNode p) {
+    public Void visit(NameExpr ASTNode, ASTIdentifierNode identifierNode) {
 
-        ResolvedValueDeclaration rvd;
+        ResolvedValueDeclaration resolvedDeclaration;
 
         try {
-            rvd = JavaParserFacade.get(_ts).solve(u).getCorrespondingDeclaration();
+            resolvedDeclaration = JavaParserFacade.get(_typeSolver).solve(ASTNode).getCorrespondingDeclaration();
         }
         catch (Exception e) {
-            rvd = null;
+            resolvedDeclaration = null;
         }
 
-        if (rvd == null) {
+        if (resolvedDeclaration == null) {
             return null;
         }
 
-        if (rvd.isField()) {
-            String name = rvd.getName();
+        if (resolvedDeclaration.isField()) {
+            String name = resolvedDeclaration.getName();
             String type = null;
 
             try {
-                type = rvd.getType().describe();
+                type = resolvedDeclaration.getType().describe();
             }
             catch (UnsolvedSymbolException use) {
             }
@@ -223,12 +218,12 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
                     new ASTIdentifierNode(
                             name,
                             IdentifierKind.FIELD,
-                            u.getBegin().get().line,
-                            u.getEnd().get().line,
+                            ASTNode.getBegin().get().line,
+                            ASTNode.getEnd().get().line,
                             type
                     );
 
-            p.addChild(fieldNode);
+            identifierNode.addChild(fieldNode);
         }
 
         return null;

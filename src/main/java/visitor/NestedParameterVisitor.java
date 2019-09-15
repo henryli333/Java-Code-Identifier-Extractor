@@ -8,21 +8,21 @@ import model.IdentifierKind;
 public class NestedParameterVisitor extends IdentifierExtractorVisitor {
 
     public NestedParameterVisitor(IdentifierExtractorVisitor visitor) {
-        super(visitor._cu, visitor._ts);
+        super(visitor._compilationUnit, visitor._typeSolver);
     }
 
     @Override
-    public Void visit(Parameter u, ASTIdentifierNode p) {
+    public Void visit(Parameter ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode variableNode =
                 new ASTIdentifierNode(
-                        u.getNameAsString(),
+                        ASTNode.getNameAsString(),
                         IdentifierKind.VARIABLE,
-                        u.getBegin().get().line,
-                        u.getEnd().get().line,
-                        u.getType() instanceof UnknownType ? null : u.getTypeAsString()
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line,
+                        ASTNode.getType() instanceof UnknownType ? null : ASTNode.getTypeAsString()
                 );
 
-        p.addChild(variableNode);
+        identifierNode.addChild(variableNode);
 
         return null;
     }
