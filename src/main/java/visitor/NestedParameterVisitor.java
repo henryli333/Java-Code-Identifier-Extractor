@@ -5,9 +5,9 @@ import com.github.javaparser.ast.type.UnknownType;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
 
-public class NestedParameterVisitorDeclared extends DeclaredIdentifierExtractorVisitor {
+public class NestedParameterVisitor extends DeclaredIdentifierExtractorVisitor {
 
-    public NestedParameterVisitorDeclared(DeclaredIdentifierExtractorVisitor visitor) {
+    public NestedParameterVisitor(DeclaredIdentifierExtractorVisitor visitor) {
         super(visitor._compilationUnit, visitor._typeSolver);
     }
 
