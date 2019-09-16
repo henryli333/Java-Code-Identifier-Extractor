@@ -16,8 +16,9 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import visitor.DeclaredIdentifierExtractorVisitor;
 import visitor.IdentifierExtractorVisitor;
-import visitor.SuperIdentifierExtractorVisitor;
+import visitor.UsedIdentifierExtractorVisitor;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,15 +35,15 @@ public class Main implements Runnable {
     }
 
     enum Verbosity {
-        LOW,
-        FULL
+        DECLARATIONS,
+        USAGES
     }
 
-    @Option(names = {"-f", "--format"}, description = "Format from: ${COMPLETION-CANDIDATES}\n(default: ${LOW-VALUE})")
+    @Option(names = {"-f", "--format"}, description = "Format from: ${COMPLETION-CANDIDATES}\n(default: ${DECLARATIONS-VALUE})")
     private Formatter formatterType = Formatter.JSON;
 
-    @Option(names = {"-v", "--verbosity"}, description = "Amount of identifiers to extract, from: ${COMPLETION-CANDIDATES}\n(default: ${LOW-VALUE})")
-    private Verbosity verbosity = Verbosity.FULL;
+    @Option(names = {"-v", "--verbosity"}, description = "Amount of identifiers to extract, from: ${COMPLETION-CANDIDATES}\n(default: ${DECLARATIONS-VALUE})")
+    private Verbosity verbosity = Verbosity.USAGES;
 
     @Option(names = {"-r", "--recursive"}, description = "Recursively inspect directories")
     @SuppressWarnings({"UnusedDeclaration"})
@@ -114,7 +115,7 @@ public class Main implements Runnable {
             for (ParseResult<CompilationUnit> pr : compilationUnits) {
                 if (pr.getResult().isPresent()) {
                     CompilationUnit cu = pr.getResult().get();
-                    IdentifierExtractorVisitor visitor = getVisitor(verbosity, cu, typeSolver);
+                    IdentifierExtractorVisitor<Void, ASTIdentifierNode> visitor = getVisitor(verbosity, cu, typeSolver);
 
                     cu.accept(visitor, rootNode);
                 }
@@ -136,12 +137,12 @@ public class Main implements Runnable {
         }
     }
 
-    private static IdentifierExtractorVisitor getVisitor(Verbosity v, CompilationUnit cu, TypeSolver ts) {
+    private static IdentifierExtractorVisitor<Void, ASTIdentifierNode> getVisitor(Verbosity v, CompilationUnit cu, TypeSolver ts) {
         switch (v) {
-            case LOW:
-                return new IdentifierExtractorVisitor(cu, ts);
-            case FULL:
-                return new SuperIdentifierExtractorVisitor(cu, ts);
+            case DECLARATIONS:
+                return new DeclaredIdentifierExtractorVisitor(cu, ts);
+            case USAGES:
+                return new UsedIdentifierExtractorVisitor(cu, ts);
             default:
                 throw new RuntimeException("No verbosity specified - missing switch case?");
         }

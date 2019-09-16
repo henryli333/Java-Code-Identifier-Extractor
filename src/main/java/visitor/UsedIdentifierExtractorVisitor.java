@@ -6,9 +6,9 @@ import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
 
-public class SuperIdentifierExtractorVisitor extends IdentifierExtractorVisitor {
+public class UsedIdentifierExtractorVisitor extends DeclaredIdentifierExtractorVisitor {
 
-    public SuperIdentifierExtractorVisitor(CompilationUnit compilationUnit, TypeSolver typeSolver) {
+    public UsedIdentifierExtractorVisitor(CompilationUnit compilationUnit, TypeSolver typeSolver) {
         super(compilationUnit, typeSolver);
     }
 
