@@ -39,10 +39,10 @@ public class Main implements Runnable {
         USAGES
     }
 
-    @Option(names = {"-f", "--format"}, description = "Format from: ${COMPLETION-CANDIDATES}\n(default: ${DECLARATIONS-VALUE})")
+    @Option(names = {"-f", "--format"}, description = "Format from: ${COMPLETION-CANDIDATES}\n(default: ${DEFAULT-VALUE})")
     private Formatter formatterType = Formatter.JSON;
 
-    @Option(names = {"-v", "--verbosity"}, description = "Amount of identifiers to extract, from: ${COMPLETION-CANDIDATES}\n(default: ${DECLARATIONS-VALUE})")
+    @Option(names = {"-v", "--verbosity"}, description = "Amount of identifiers to extract, from: ${COMPLETION-CANDIDATES}\n(default: ${DEFAULT-VALUE})")
     private Verbosity verbosity = Verbosity.USAGES;
 
     @Option(names = {"-r", "--recursive"}, description = "Recursively inspect directories")
