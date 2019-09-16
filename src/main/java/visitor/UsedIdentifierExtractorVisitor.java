@@ -16,15 +16,21 @@ public class UsedIdentifierExtractorVisitor extends DeclaredIdentifierExtractorV
     public Void visit(AssignExpr ASTNode, ASTIdentifierNode identifierNode) {
         ASTNode.getValue().accept(this, identifierNode);
 
-        ASTIdentifierNode targetNode =
-                new ASTIdentifierNode(
-                    ASTNode.getTarget().asNameExpr().getName().asString(),
-                    IdentifierKind.USE,
-                    ASTNode.getBegin().get().line,
-                    ASTNode.getEnd().get().line
-                );
+        if (ASTNode.getTarget().isNameExpr()) {
+            ASTIdentifierNode targetNode =
+                    new ASTIdentifierNode(
+                            ASTNode.getTarget().asNameExpr().getName().asString(),
+                            IdentifierKind.USE,
+                            ASTNode.getBegin().get().line,
+                            ASTNode.getEnd().get().line
+                    );
 
-        identifierNode.addChild(targetNode);
+            identifierNode.addChild(targetNode);
+        }
+        else {
+            ASTNode.getTarget().accept(this, identifierNode);
+        }
+
 
         return null;
     }
