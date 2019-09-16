@@ -14,7 +14,7 @@ import model.IdentifierKind;
 
 public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTIdentifierNode> {
 
-    public static final String DEFAULT_PACKAGE_NAME = "<default package>";
+    public static final String DEFAULT_PACKAGE_NAME = "";
 
     protected final CompilationUnit _compilationUnit;
     protected final TypeSolver _typeSolver;
@@ -201,14 +201,10 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
             resolvedDeclaration = JavaParserFacade.get(_typeSolver).solve(ASTNode).getCorrespondingDeclaration();
         }
         catch (Exception e) {
-            return null;
+            resolvedDeclaration = null;
         }
 
-        if (resolvedDeclaration == null) {
-            return null;
-        }
-
-        if (resolvedDeclaration.isField()) {
+        if (resolvedDeclaration != null && resolvedDeclaration.isField()) {
             String name = resolvedDeclaration.getName();
             String type = null;
 
