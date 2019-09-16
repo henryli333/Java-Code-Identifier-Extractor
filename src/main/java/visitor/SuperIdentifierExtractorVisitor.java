@@ -2,9 +2,6 @@ package visitor;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.expr.*;
-import com.github.javaparser.resolution.UnsolvedSymbolException;
-import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
-import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import model.ASTIdentifierNode;
 import model.IdentifierKind;
@@ -66,4 +63,35 @@ public class SuperIdentifierExtractorVisitor extends IdentifierExtractorVisitor 
         return null;
     }
 
+    @Override
+    public Void visit(MethodReferenceExpr n, ASTIdentifierNode arg) {
+        n.getScope().accept(this, arg);
+
+        ASTIdentifierNode referenceNode =
+                new ASTIdentifierNode(
+                        n.getIdentifier(),
+                        IdentifierKind.USE,
+                        n.getBegin().get().line,
+                        n.getEnd().get().line
+                );
+
+        arg.addChild(referenceNode);
+
+        return null;
+    }
+
+    @Override
+    public Void visit(MarkerAnnotationExpr n, ASTIdentifierNode arg) {
+        return null;
+    }
+
+    @Override
+    public Void visit(NormalAnnotationExpr n, ASTIdentifierNode arg) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SingleMemberAnnotationExpr n, ASTIdentifierNode arg) {
+        return null;
+    }
 }
