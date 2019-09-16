@@ -9,5 +9,6 @@ public enum IdentifierKind {
     CONSTRUCTOR,
     PARAMETER,
     FIELD,
-    VARIABLE
+    VARIABLE,
+    USE
 }
