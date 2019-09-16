@@ -58,6 +58,9 @@ public class SimpleOutputFormatter implements OutputFormatter {
             case VARIABLE:
                 sb.append("Variable: ");
                 break;
+            case USE:
+                sb.append("Use: ");
+                break;
             // Don't print root node; only its children are important
             case ROOT:
                 return "";

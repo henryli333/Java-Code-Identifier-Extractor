@@ -17,6 +17,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import visitor.IdentifierExtractorVisitor;
+import visitor.SuperIdentifierExtractorVisitor;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,8 +33,16 @@ public class Main implements Runnable {
         JSON
     }
 
-    @Option(names = {"-f", "--format"}, description = "Format from: ${COMPLETION-CANDIDATES}\n(default: ${DEFAULT-VALUE})")
+    enum Verbosity {
+        LOW,
+        FULL
+    }
+
+    @Option(names = {"-f", "--format"}, description = "Format from: ${COMPLETION-CANDIDATES}\n(default: ${LOW-VALUE})")
     private Formatter formatterType = Formatter.JSON;
+
+    @Option(names = {"-v", "--verbosity"}, description = "Amount of identifiers to extract, from: ${COMPLETION-CANDIDATES}\n(default: ${LOW-VALUE})")
+    private Verbosity verbosity = Verbosity.FULL;
 
     @Option(names = {"-r", "--recursive"}, description = "Recursively inspect directories")
     @SuppressWarnings({"UnusedDeclaration"})
@@ -105,7 +114,9 @@ public class Main implements Runnable {
             for (ParseResult<CompilationUnit> pr : compilationUnits) {
                 if (pr.getResult().isPresent()) {
                     CompilationUnit cu = pr.getResult().get();
-                    cu.accept(new IdentifierExtractorVisitor(cu, typeSolver), rootNode);
+                    IdentifierExtractorVisitor visitor = getVisitor(verbosity, cu, typeSolver);
+
+                    cu.accept(visitor, rootNode);
                 }
             }
 
@@ -122,6 +133,17 @@ public class Main implements Runnable {
                 return new JsonOutputFormatter();
             default:
                 throw new RuntimeException("No formatter specified - missing switch case?");
+        }
+    }
+
+    private static IdentifierExtractorVisitor getVisitor(Verbosity v, CompilationUnit cu, TypeSolver ts) {
+        switch (v) {
+            case LOW:
+                return new IdentifierExtractorVisitor(cu, ts);
+            case FULL:
+                return new SuperIdentifierExtractorVisitor(cu, ts);
+            default:
+                throw new RuntimeException("No verbosity specified - missing switch case?");
         }
     }
 

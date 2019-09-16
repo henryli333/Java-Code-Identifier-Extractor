@@ -60,7 +60,6 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
         return null;
     }
 
-
     @Override
     public Void visit(EnumDeclaration ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode classNode =
@@ -139,6 +138,11 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
     @Override
     public Void visit(VariableDeclarator ASTNode, ASTIdentifierNode identifierNode) {
+
+        if (ASTNode.getInitializer().isPresent()) {
+            ASTNode.getInitializer().get().accept(this, identifierNode);
+        }
+
         ASTIdentifierNode variableNode =
                 new ASTIdentifierNode(
                         ASTNode.getNameAsString(),
@@ -197,7 +201,7 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
             resolvedDeclaration = JavaParserFacade.get(_typeSolver).solve(ASTNode).getCorrespondingDeclaration();
         }
         catch (Exception e) {
-            resolvedDeclaration = null;
+            return null;
         }
 
         if (resolvedDeclaration == null) {
@@ -225,7 +229,11 @@ public class IdentifierExtractorVisitor extends GenericVisitorAdapter<Void, ASTI
 
             identifierNode.addChild(fieldNode);
         }
+        else {
+            ASTNode.getName().accept(this, identifierNode);
+        }
 
         return null;
     }
+
 }
