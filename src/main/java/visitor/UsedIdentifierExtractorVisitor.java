@@ -13,85 +13,85 @@ public class UsedIdentifierExtractorVisitor extends DeclaredIdentifierExtractorV
     }
 
     @Override
-    public Void visit(AssignExpr n, ASTIdentifierNode arg) {
-        n.getValue().accept(this, arg);
+    public Void visit(AssignExpr ASTNode, ASTIdentifierNode identifierNode) {
+        ASTNode.getValue().accept(this, identifierNode);
 
         ASTIdentifierNode targetNode =
                 new ASTIdentifierNode(
-                    n.getTarget().asNameExpr().getName().asString(),
+                    ASTNode.getTarget().asNameExpr().getName().asString(),
                     IdentifierKind.USE,
-                    n.getBegin().get().line,
-                    n.getEnd().get().line
+                    ASTNode.getBegin().get().line,
+                    ASTNode.getEnd().get().line
                 );
 
-        arg.addChild(targetNode);
+        identifierNode.addChild(targetNode);
 
         return null;
     }
 
     @Override
-    public Void visit(SimpleName n, ASTIdentifierNode arg) {
+    public Void visit(SimpleName ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode nameNode =
                 new ASTIdentifierNode(
-                        n.getIdentifier(),
+                        ASTNode.getIdentifier(),
                         IdentifierKind.USE,
-                        n.getBegin().get().line,
-                        n.getEnd().get().line
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line
                 );
 
-        arg.addChild(nameNode);
+        identifierNode.addChild(nameNode);
 
         return null;
     }
 
     @Override
-    public Void visit(Name n, ASTIdentifierNode arg) {
+    public Void visit(Name ASTNode, ASTIdentifierNode identifierNode) {
         ASTIdentifierNode nameNode =
                 new ASTIdentifierNode(
-                        n.getIdentifier(),
+                        ASTNode.getIdentifier(),
                         IdentifierKind.USE,
-                        n.getBegin().get().line,
-                        n.getEnd().get().line
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line
                 );
 
-        arg.addChild(nameNode);
+        identifierNode.addChild(nameNode);
 
-        if (n.getQualifier().isPresent()) {
-            n.getQualifier().get().accept(this, arg);
+        if (ASTNode.getQualifier().isPresent()) {
+            ASTNode.getQualifier().get().accept(this, identifierNode);
         }
 
         return null;
     }
 
     @Override
-    public Void visit(MethodReferenceExpr n, ASTIdentifierNode arg) {
-        n.getScope().accept(this, arg);
+    public Void visit(MethodReferenceExpr ASTNode, ASTIdentifierNode identifierNode) {
+        ASTNode.getScope().accept(this, identifierNode);
 
         ASTIdentifierNode referenceNode =
                 new ASTIdentifierNode(
-                        n.getIdentifier(),
+                        ASTNode.getIdentifier(),
                         IdentifierKind.USE,
-                        n.getBegin().get().line,
-                        n.getEnd().get().line
+                        ASTNode.getBegin().get().line,
+                        ASTNode.getEnd().get().line
                 );
 
-        arg.addChild(referenceNode);
+        identifierNode.addChild(referenceNode);
 
         return null;
     }
 
     @Override
-    public Void visit(MarkerAnnotationExpr n, ASTIdentifierNode arg) {
+    public Void visit(MarkerAnnotationExpr ASTNode, ASTIdentifierNode identifierNode) {
         return null;
     }
 
     @Override
-    public Void visit(NormalAnnotationExpr n, ASTIdentifierNode arg) {
+    public Void visit(NormalAnnotationExpr ASTNode, ASTIdentifierNode identifierNode) {
         return null;
     }
 
     @Override
-    public Void visit(SingleMemberAnnotationExpr n, ASTIdentifierNode arg) {
+    public Void visit(SingleMemberAnnotationExpr ASTNode, ASTIdentifierNode identifierNode) {
         return null;
     }
 }
