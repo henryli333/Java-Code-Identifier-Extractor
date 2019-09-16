@@ -174,7 +174,7 @@ public class DeclaredIdentifierExtractorVisitor extends IdentifierExtractorVisit
 
     @Override
     public Void visit(LambdaExpr ASTNode, ASTIdentifierNode identifierNode) {
-        ASTNode.getParameters().accept(new NestedParameterVisitorDeclared(this), identifierNode);
+        ASTNode.getParameters().accept(new NestedParameterVisitor(this), identifierNode);
 
         ASTNode.getBody().accept(this, identifierNode);
         if (ASTNode.getExpressionBody().isPresent()) {
@@ -186,7 +186,7 @@ public class DeclaredIdentifierExtractorVisitor extends IdentifierExtractorVisit
 
     @Override
     public Void visit(CatchClause ASTNode, ASTIdentifierNode identifierNode) {
-        ASTNode.getParameter().accept(new NestedParameterVisitorDeclared(this), identifierNode);
+        ASTNode.getParameter().accept(new NestedParameterVisitor(this), identifierNode);
         ASTNode.getBody().accept(this, identifierNode);
         return null;
     }
