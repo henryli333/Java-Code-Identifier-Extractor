@@ -26,7 +26,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-@Command(name = "JavaIdentifierExtractor", description = "Looks at Java source code and extracts code identifiers for methods")
+@Command(name = "JavaIdentifierExtractor", description = "Looks at Java source code and extracts code identifiers")
 public class Main implements Runnable {
 
     enum Formatter {
